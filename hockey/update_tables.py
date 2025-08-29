@@ -4,13 +4,14 @@ import duckdb
 
 import process_skater_data
 import process_team_data
+import process_game_data
 
 
-TEAM_GAMES = 'https://moneypuck.com/moneypuck/playerData/careers/gameByGame/all_teams.csv'
-TEAM_SEASON = 'https://moneypuck.com/moneypuck/playerData/seasonSummary/{}/regular/teams.csv'
-SKATER_SEASON = 'https://moneypuck.com/moneypuck/playerData/seasonSummary/{}/regular/skaters.csv'
+############## Constants ################
 
 DB_NAME = 'hockey-stats.db'
+
+########### End Constants ###############
 
 
 def main(season: int) -> None:
@@ -23,14 +24,21 @@ def main(season: int) -> None:
     :param int season: NHL season for which to pull data
     """
 
-    conn = duckdb.connect(database=DB_NAME, read_only=False)
-
+    print('Gathering skater data...')
     skater_df = process_skater_data.gather_df(season)
+
+    print('Gathering team data...')
     team_df = process_team_data.gather_df(season)
 
-    for df, table_name in zip([skater_df, team_df],
-                              ['skaters', 'teams']):
+    print('Gathering game-by-game team data...')
+    team_games_df = process_game_data.gather_df(season)
 
+    conn = duckdb.connect(database=DB_NAME, read_only=False)
+
+    for df, table_name in zip([skater_df, team_df, team_games_df],
+                              ['skaters', 'teams', 'team_games']):
+
+        print(f"Updating {table_name} table...")
         conn.execute(f'CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM df;')
 
 

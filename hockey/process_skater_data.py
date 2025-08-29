@@ -29,6 +29,7 @@ def gather_df(season: int) -> pl.DataFrame:
         - Skater points-per-hour plot
 
     :param int season: The season we'll be working with.
+    :return pl.DataFrame: Cleaned and proccessed DataFrame that will be used to update the DB.
     """
 
     df = pl.read_csv(DATA_URL.format(season), columns=USED_COLUMNS)
@@ -50,12 +51,12 @@ def gather_df(season: int) -> pl.DataFrame:
     # i.e. goalsFor -> goalsForPerHour (GFph)
     for total_col, rate_col in zip(['goalsFor', 'goalsAgainst', 'xGoalsFor',
                                     'xGoalsAgainst', 'points', 'goals'],
-                                    ['GFph', 'GAph', 'xGFph', 'xGAph', 'ppg', 'gph']):
+                                    ['GFph', 'GAph', 'xGFph', 'xGAph', 'pph', 'gph']):
 
         df = df.with_columns((pl.col(total_col) * (60.0 / pl.col('icetime'))).alias(rate_col))
 
     # Also compute a players average icetime per game
-    df = df.with_columns(pl.col('icetime') / (pl.col('games_played') * 60.0))
+    df = df.with_columns((pl.col('icetime') / (pl.col('games_played'))).alias('avgTOI'))
 
     return df
 
@@ -63,4 +64,3 @@ def gather_df(season: int) -> pl.DataFrame:
 if __name__ == '__main__':
     test_df = gather_df(2024)
     print(test_df)
-    test_df.write_csv('test.csv')
