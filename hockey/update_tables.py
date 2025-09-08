@@ -33,6 +33,7 @@ def main(season: int) -> None:
     print('Gathering game-by-game team data...')
     team_games_df = process_game_data.gather_df(season)
 
+    print('Connecting to database...')
     conn = duckdb.connect(database=DB_NAME, read_only=False)
 
     for df, table_name in zip([skater_df, team_df, team_games_df],
@@ -40,6 +41,8 @@ def main(season: int) -> None:
 
         print(f"Updating {table_name} table...")
         conn.execute(f'CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM df;')
+
+    print('Database update complete!')
 
 
 if __name__ == '__main__':
