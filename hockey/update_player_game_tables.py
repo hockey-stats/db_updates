@@ -64,9 +64,9 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
         df = df.with_columns(
             pl.lit(state).alias('state'),
             pl.lit(team).alias('team'),
-            ((pl.col('GF') / (pl.col('GF') + pl.col('GA'))) * 100).round(2).alias('GF%'),
-            ((pl.col('xGF') / (pl.col('xGF') + pl.col('xGA'))) * 100).round(2).alias('xGF%'),
-            ((pl.col('CF') / (pl.col('CF') + pl.col('CA'))) * 100).round(2).alias('CF%'),
+            ((pl.col('GF') / (pl.col('GF') + pl.col('GA'))) * 100).round(2).alias('GF_share'),
+            ((pl.col('xGF') / (pl.col('xGF') + pl.col('xGA'))) * 100).round(2).alias('xGF_share'),
+            ((pl.col('CF') / (pl.col('CF') + pl.col('CA'))) * 100).round(2).alias('CF_share'),
         ).cast(
             {'xGF': pl.Float64,
              'xGA': pl.Float64}
@@ -97,7 +97,7 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
 
     return final_df[['name', 'game_id', 'game_date', 'team', 'position', 'state', 'icetime',
                      'goals', 'primary_assists', 'secondary_assists', 'shots', 'ixG',
-                     'GF', 'GA', 'GF%', 'xGF', 'xGA', 'xGF%', 'CF', 'CA', 'CF%']]
+                     'GF', 'GA', 'GF_share', 'xGF', 'xGA', 'xGF_share', 'CF', 'CA', 'CF_share']]
 
 def process_goalie_data(path, game_id):
     """
@@ -110,13 +110,15 @@ def process_goalie_data(path, game_id):
 
     goalie_df = pl.DataFrame()
     for filename in glob.glob(os.path.join(path, f'*{game_id}*goalies.csv')):
-        _, _, team, state, _ = os.path.basename(filename).split('_')
+        date, _, team, state, _ = os.path.basename(filename).split('_')
 
         df = pl.read_csv(filename)[['Player', 'TOI', 'Shots Against', 'Goals Against',
                                     'Expected Goals Against']]
         df = df.with_columns(
             pl.lit(team).alias('team'),
-            pl.lit(state).alias('state')
+            pl.lit(state).alias('state'),
+            pl.lit(game_id).alias('game_id'),
+            pl.lit(date).alias('game_date')
         ).cast(
             {'TOI': pl.Float64,
              'Expected Goals Against': pl.Float64}
@@ -125,11 +127,9 @@ def process_goalie_data(path, game_id):
         if len(goalie_df) == 0:
             goalie_df = df
         else:
-            print(goalie_df)
-            print(df)
             goalie_df = pl.concat([goalie_df, df])
 
-    goalie_df.rename({
+    goalie_df = goalie_df.rename({
         'Player': 'name',
         'TOI': 'icetime',
         'Shots Against': 'SA',
@@ -137,7 +137,8 @@ def process_goalie_data(path, game_id):
         'Expected Goals Against': 'xGA'
     })
 
-    return goalie_df
+    return goalie_df[['name', 'game_id', 'game_date', 'team', 'state', 'icetime',
+                      'SA', 'GA', 'xGA']]
 
 
 def main(path, game_id):
@@ -156,10 +157,10 @@ def main(path, game_id):
     conn = duckdb.connect(database=DB_NAME, read_only=False)
 
     print("Updating skater table...")
-    conn.execute("CREATE OR REPLACE TABLE skater_games AS SELECT * FROM skater_df")
+    conn.execute("INSERT INTO skater_games SELECT * FROM skater_df")
 
-    print("Updating skater table...")
-    conn.execute("CREATE OR REPLACE TABLE goalie_games AS SELECT * FROM goalie_df")
+    print("Updating goalie table...")
+    conn.execute("INSERT INTO goalie_games SELECT * FROM goalie_df")
 
     print('Database update complete!')
 
