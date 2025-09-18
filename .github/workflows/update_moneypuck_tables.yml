@@ -30,6 +30,7 @@ jobs:
       - name: Run Update Script
         env:
           PYTHONPATH: ${{ github.workspace }}
+          GITHUB_PAT: ${{ secrets.ARTIFACT_DOWNLOAD_TOKEN }}
         run: python3 hockey/update_player_game_tables.py
       #
       - name: Update DB Artifact
