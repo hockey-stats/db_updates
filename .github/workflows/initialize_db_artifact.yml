@@ -1,0 +1,34 @@
+name: Initialize Hockey Database Artifact
+on:
+  workflow_dispatch:
+
+env:
+  DATA_ARTIFACT_NAME: 'db-file'
+
+jobs:
+  initialize-db:
+    runs-on: ubuntu-latest
+    ###
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      #
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      #
+      - name: Install Requirements
+        run: pip install -r requirements.txt
+      #
+      - name: Run Initialization Script
+        run: python3 initialize_player_game_tables.py
+      #
+      - name: Upload DB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.DB_ARTIFACT_NAME }}
+          path: ./*db
+          retention-days: 10
+          overwrite: true
