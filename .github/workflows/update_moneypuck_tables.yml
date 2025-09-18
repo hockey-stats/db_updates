@@ -27,11 +27,6 @@ jobs:
       - name: Install Requirements
         run: pip install -r requirements.txt
       #
-      - name: Download DB Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.DB_ARTIFACT_NAME }}
-      #
       - name: Run Update Script
         env:
           PYTHONPATH: ${{ github.workspace }}
