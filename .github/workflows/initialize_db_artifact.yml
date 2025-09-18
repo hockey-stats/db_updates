@@ -23,7 +23,7 @@ jobs:
         run: pip install -r requirements.txt
       #
       - name: Run Initialization Script
-        run: python3 initialize_player_game_tables.py
+        run: python3 hockey/initialize_player_game_tables.py
       #
       - name: Upload DB Artifact
         uses: actions/upload-artifact@v4
