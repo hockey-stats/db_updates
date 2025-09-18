@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 
 env:
-  DATA_ARTIFACT_NAME: 'db-file'
+  DB_ARTIFACT_NAME: 'db-file'
 
 jobs:
   initialize-db:
@@ -29,6 +29,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.DB_ARTIFACT_NAME }}
-          path: ./*db
+          path: ./hockey-stats.db
           retention-days: 10
           overwrite: true
