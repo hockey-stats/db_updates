@@ -1,0 +1,46 @@
+name: Update Tables from Moneypuck.com
+on:
+  workflow_dispatch:
+  push: 
+    branches:
+    - 'main'
+  schedule:
+    - cron: 0 7 * * *
+
+env:
+  DB_ARTIFACT_NAME: 'db-file'
+
+jobs:
+  update-tables:
+    runs-on: ubuntu-latest
+    ###
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      #
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      #
+      - name: Install Requirements
+        run: pip install -r requirements.txt
+      #
+      - name: Download DB Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.DB_ARTIFACT_NAME }}
+      #
+      - name: Run Update Script
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: python3 hockey/update_player_game_tables.py
+      #
+      - name: Update DB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.DB_ARTIFACT_NAME }}
+          path: ./*db
+          retention-days: 10
+          overwrite: true
