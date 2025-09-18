@@ -31,7 +31,7 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
           GITHUB_PAT: ${{ secrets.ARTIFACT_DOWNLOAD_TOKEN }}
-        run: python3 hockey/update_player_game_tables.py
+        run: python3 hockey/update_tables.py
       #
       - name: Update DB Artifact
         uses: actions/upload-artifact@v4
