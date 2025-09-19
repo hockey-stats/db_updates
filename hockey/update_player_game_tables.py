@@ -1,9 +1,5 @@
 import os
 import glob
-import requests
-import datetime
-import zipfile
-import json
 from argparse import ArgumentParser
 
 import duckdb
