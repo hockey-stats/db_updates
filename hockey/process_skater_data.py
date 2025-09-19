@@ -51,12 +51,19 @@ def gather_df(season: int) -> pl.DataFrame:
     # i.e. goalsFor -> goalsForPerHour (GFph)
     for total_col, rate_col in zip(['goalsFor', 'goalsAgainst', 'xGoalsFor',
                                     'xGoalsAgainst', 'points', 'goals'],
-                                    ['GFph', 'GAph', 'xGFph', 'xGAph', 'pph', 'gph']):
+                                    ['goalsForPerHour', 'goalsAgainstPerHour', 'xGoalsForPerHour',
+                                     'xGoalsAgainstPerHour', 'pointsPerHour', 'goalsPerHour']):
 
         df = df.with_columns((pl.col(total_col) * (60.0 / pl.col('icetime'))).alias(rate_col))
 
     # Also compute a players average icetime per game
-    df = df.with_columns((pl.col('icetime') / (pl.col('games_played'))).alias('avgTOI'))
+    df = df.with_columns((pl.col('icetime') / (pl.col('games_played'))).alias('averageIceTime'))
+
+    df = df.rename({
+        'playerId': 'playerID',
+        'games_played': 'gamesPlayed',
+        'icetime': 'iceTime'
+    })
 
     return df
 

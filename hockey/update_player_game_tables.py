@@ -12,60 +12,9 @@ import polars as pl
 
 ############## Constants ################
 
-DB_NAME = 'hockey-stats.db'
+DB_NAME = 'md:'
 
 ########### End Constants ###############
-
-
-def download_database() -> None:
-    """
-    Function to download the artifact containing the .db file from GitHub.
-
-    Looks for the version of the artifact that was most recently updated, assuming that
-    to be the most recent version of the database.
-
-    Expects a GitHub PAT with proper permissions to be available as an environment variable (in
-    this case provided by the GitHub Actions workflow).
-    """
-    url = "https://api.github.com/repos/hockey-stats/db_updates/actions/artifacts"
-    payload = {}
-    headers = {
-        'Authorization': f'Bearer {os.environ["GITHUB_PAT"]}'
-    }
-    output_filename = 'db.zip'
-
-    # Returns a list of every available artifact for the repo
-    response = requests.request("GET", url, headers=headers, data=payload, timeout=10)
-    response_body = json.loads(response.text)
-
-    # Variable to store the most recent updated time for an artifact, for comparison
-    most_recent_update = None
-    download_url = ''
-
-    for artifact in response_body['artifacts']:
-        update_time = datetime.datetime.strptime(artifact['updated_at'], '%Y-%m-%dT%H:%M:%SZ')\
-            .replace(tzinfo=datetime.timezone.utc)
-
-        if most_recent_update is None or most_recent_update or update_time > most_recent_update:
-            most_recent_update = update_time
-            download_url = artifact['archive_download_url']
-
-    if most_recent_update is None:
-        # If no artifact was found, raise an error
-        raise ValueError("No artifact found, exiting...")
-
-    # Downloads the artifact as a zip file
-    dl_response = requests.request("GET", download_url, headers=headers, data=payload, timeout=60)
-    with open(output_filename, 'wb') as fo:
-        fo.write(dl_response.content)
-
-    # And unzip
-    with zipfile.ZipFile(output_filename, 'r') as zip_ref:
-        zip_ref.extractall(os.getcwd())
-
-    print(os.listdir(os.getcwd))
-
-    print('Database download complete')
 
 
 def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
@@ -119,9 +68,9 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
         df = df.with_columns(
             pl.lit(state).alias('state'),
             pl.lit(team).alias('team'),
-            ((pl.col('GF') / (pl.col('GF') + pl.col('GA'))) * 100).round(2).alias('GF_share'),
-            ((pl.col('xGF') / (pl.col('xGF') + pl.col('xGA'))) * 100).round(2).alias('xGF_share'),
-            ((pl.col('CF') / (pl.col('CF') + pl.col('CA'))) * 100).round(2).alias('CF_share'),
+            ((pl.col('GF') / (pl.col('GF') + pl.col('GA'))) * 100).round(2).alias('goalsShare'),
+            ((pl.col('xGF') / (pl.col('xGF') + pl.col('xGA'))) * 100).round(2).alias('xGoalsShare'),
+            ((pl.col('CF') / (pl.col('CF') + pl.col('CA'))) * 100).round(2).alias('corsiShare'),
         ).cast(
             {'xGF': pl.Float64,
              'xGA': pl.Float64}
@@ -135,24 +84,40 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
     final_df = indiv_df.join(onice_df, on=['Player', 'team', 'state', 'Position'], how='right')
     final_df = final_df.rename({
         'Player': 'name',
+        'game_id': 'gameID',
+        'game_date': 'gameDate',
         'Position': 'position',
-        'TOI': 'icetime',
+        'TOI': 'iceTime',
         'Goals': 'goals',
-        'First Assists': 'primary_assists',
-        'Second Assists': 'secondary_assists',
-        'Shots': 'shots'
+        'First Assists': 'primaryAssists',
+        'Second Assists': 'secondaryAssists',
+        'Shots': 'shots',
+        'ixG': 'individualxGoals',
+        'GF': 'goalsFor',
+        'GA': 'goalsAgainst',
+        'xGF': 'xGoalsFor',
+        'xGA': 'xGoalsAgainst',
+        'CF': 'corsiFor',
+        'CA': 'corsiAgainst'
     })
 
-    final_df = final_df.sort(by='name', descending=False).fill_nan(0)
+    # Some columns (such as date and game id) will be null for certain players in certain game
+    # states, so fill those seperately before filling the remaining null/NaN values with 0s.
+    final_df = final_df.sort(by='name', descending=False)\
+        .with_columns(
+            pl.col('gameID').fill_null(game_id),
+            pl.col('gameDate').fill_null(date)
+        ).fill_nan(0).fill_null(0)
 
     # Check for and handle an error with the data source where xG values are all given as 0
-    col_sum = final_df['ixG'].sum()
+    col_sum = final_df['individualxGoals'].sum()
     if col_sum == 0:
         raise ValueError("Expected Goal values sum to 0, issue with data source, exiting...")
 
-    return final_df[['name', 'game_id', 'game_date', 'team', 'position', 'state', 'icetime',
-                     'goals', 'primary_assists', 'secondary_assists', 'shots', 'ixG',
-                     'GF', 'GA', 'GF_share', 'xGF', 'xGA', 'xGF_share', 'CF', 'CA', 'CF_share']]
+    return final_df[['name', 'gameID', 'gameDate', 'team', 'position', 'state', 'iceTime',
+                     'goals', 'primaryAssists', 'secondaryAssists', 'shots', 'individualxGoals',
+                     'goalsFor', 'goalsAgainst', 'goalsShare', 'xGoalsFor', 'xGoalsAgainst',
+                     'xGoalsShare', 'corsiFor', 'corsiAgainst', 'corsiShare']]
 
 def process_goalie_data(path, game_id):
     """
@@ -186,14 +151,24 @@ def process_goalie_data(path, game_id):
 
     goalie_df = goalie_df.rename({
         'Player': 'name',
-        'TOI': 'icetime',
-        'Shots Against': 'SA',
-        'Goals Against': 'GA',
-        'Expected Goals Against': 'xGA'
+        'TOI': 'iceTime',
+        'Shots Against': 'shotsAgainst',
+        'Goals Against': 'goalsAgainst',
+        'Expected Goals Against': 'xGoalsAgainst',
+        'game_id': 'gameID',
+        'game_date': 'gameDate',
     })
 
-    return goalie_df[['name', 'game_id', 'game_date', 'team', 'state', 'icetime',
-                      'SA', 'GA', 'xGA']]
+    # Some columns (such as date and game id) will be null for certain players in certain game 
+    # states, so fill those seperately before filling the remaining null/NaN values with 0s.
+    goalie_df = goalie_df.sort(by='name', descending=False)\
+        .with_columns(
+            pl.col('gameID').fill_null(game_id),
+            pl.col('gameDate').fill_null(date)
+        ).fill_nan(0).fill_null(0)
+
+    return goalie_df[['name', 'gameID', 'gameDate', 'team', 'state', 'iceTime',
+                      'shotsAgainst', 'goalsAgainst', 'xGoalsAgainst']]
 
 
 def main(path, game_id):

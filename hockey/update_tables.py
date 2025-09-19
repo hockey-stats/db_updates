@@ -14,7 +14,8 @@ import process_game_data
 
 ############## Constants ################
 
-DB_NAME = 'hockey-stats.db'
+#DB_NAME = 'hockey-stats.db'
+DB_NAME = 'md:'
 
 ########### End Constants ###############
 
@@ -82,7 +83,7 @@ def main(season: int) -> None:
     """
 
     print('Downloading database artifact...')
-    download_database()
+    #download_database()
 
     print('Gathering skater data...')
     skater_df = process_skater_data.gather_df(season)

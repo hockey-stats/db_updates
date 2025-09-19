@@ -6,10 +6,6 @@ on:
  #   - 'main'
   schedule:
     - cron: 0 7 * * *
-
-env:
-  DB_ARTIFACT_NAME: 'db-file'
-
 jobs:
   update-tables:
     runs-on: ubuntu-latest
@@ -30,13 +26,5 @@ jobs:
       - name: Run Update Script
         env:
           PYTHONPATH: ${{ github.workspace }}
-          GITHUB_PAT: ${{ secrets.ARTIFACT_DOWNLOAD_TOKEN }}
+          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN_RW }}
         run: python3 hockey/update_tables.py
-      #
-      - name: Update DB Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.DB_ARTIFACT_NAME }}
-          path: ./hockey-stats.db
-          retention-days: 10
-          overwrite: true

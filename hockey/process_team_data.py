@@ -36,14 +36,16 @@ def gather_df(season: int) -> pl.DataFrame:
 
     # Rename some columns to be nicer to work with
     df = df.rename({
+        'games_played': 'gamesPlayed',
         'flurryScoreVenueAdjustedxGoalsFor': 'xGoalsFor',
         'flurryScoreVenueAdjustedxGoalsAgainst': 'xGoalsAgainst'
     })
 
     # Compute rate metrics from each column containing a total metric value,
-    # i.e. goalsFor -> goalsForPerHour (GFph)
+    # i.e. goalsFor -> goalsForPerHour 
     for total_col, rate_col in zip(['goalsFor', 'goalsAgainst', 'xGoalsFor', 'xGoalsAgainst'],
-                                   ['GFph', 'GAph', 'xGFph', 'xGAph']):
+                                   ['goalsForPerHour', 'goalsAgainstPerHour',
+                                    'xGoalsForPerHour', 'xGoalsAgainstPerHour']):
 
         df = df.with_columns((pl.col(total_col) * (60.0 / pl.col('iceTime'))).alias(rate_col))
 

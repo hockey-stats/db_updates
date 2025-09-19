@@ -3,7 +3,7 @@ import duckdb
 
 ############## Constants ################
 
-DB_NAME = 'hockey-stats.db'
+DB_NAME = 'md:'
 
 ########### End Constants ###############
 
