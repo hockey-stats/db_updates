@@ -26,9 +26,6 @@ def main(season: int) -> None:
     :param int season: NHL season for which to pull data
     """
 
-    print('Downloading database artifact...')
-    #download_database()
-
     print('Gathering skater data...')
     skater_df = process_skater_data.gather_df(season)
 
