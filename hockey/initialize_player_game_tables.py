@@ -19,26 +19,26 @@ if __name__ == '__main__':
     conn.execute("""
                 CREATE OR REPLACE TABLE skater_games (
                     name VARCHAR,
-                    game_id INT,
-                    game_date DATE,
+                    gameID INT,
+                    gameDate DATE,
                     team VARCHAR,
                     position VARCHAR,
                     state VARCHAR,
-                    icetime FLOAT,
+                    iceTime FLOAT,
                     goals INT,
-                    primary_assists INT,
-                    secondary_assists INT,
+                    primaryAssists INT,
+                    secondaryAssists INT,
                     shots INT,
-                    ixG FLOAT,
-                    GF INT,
-                    GA INT,
-                    GF_share FLOAT,
-                    xGF FLOAT,
-                    xGA FLOAT,
-                    xGF_share FLOAT,
-                    CF INT,
-                    CA INT,
-                    CF_share FLOAT
+                    individualxGoals FLOAT,
+                    goalsFor INT,
+                    goalsAgainst INT,
+                    goalsShare FLOAT,
+                    xGoalsFor FLOAT,
+                    xGoalsAgainst FLOAT,
+                    xGoalsShare FLOAT,
+                    corsiFor INT,
+                    corsiAgaint INT,
+                    corsiShare FLOAT
                  );
                  """)
 
@@ -47,14 +47,14 @@ if __name__ == '__main__':
     conn.execute("""
                 CREATE OR REPLACE TABLE goalie_games (
                     name VARCHAR,
-                    game_id INT,
-                    game_date DATE,
+                    gameID INT,
+                    gameDate DATE,
                     team VARCHAR,
                     state VARCHAR,
-                    icetime FLOAT,
-                    SA INT,
-                    GA INT,
-                    xGA FLOAT
+                    iceTime FLOAT,
+                    shotsAgainst INT,
+                    goalsAgainst INT,
+                    xGoalsAgainst FLOAT
                  );
                 """)
 

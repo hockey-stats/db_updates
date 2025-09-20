@@ -38,6 +38,11 @@ def gather_df(season: int) -> pl.DataFrame:
     # Don't need to keep this column after the filter call
     df = df.drop(['playoffGame'])
 
+    df = df.rename({
+        'gameId': 'gameID',
+        'xGoalsPercentage': 'xGoalsShare'
+    })
+
     return df
 
 
