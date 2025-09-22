@@ -92,4 +92,4 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: |
-          python3 hockey/update_player_game_data.py -p ./ -g $GAME_ID
+          python3 hockey/update_player_game_tables.py -p ./ -g $GAME_ID
