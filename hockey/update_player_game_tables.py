@@ -117,8 +117,14 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
     final_df = final_df.sort(by='name', descending=False)\
         .with_columns(
             pl.col('gameID').fill_null(game_id),
-            pl.col('gameDate').fill_null(date)
+            pl.col('gameDate').fill_null(date),
+            pl.col('season').fill_null(season)
         ).fill_nan(0).fill_null(0)
+
+    # Round values in all float columns to 2 decimal places
+    for column in final_df.columns:
+        if final_df[column].dtype == pl.Float64:
+            final_df = final_df.select(pl.col(column).round(2))
 
     # Check for and handle an error with the data source where xG values are all given as 0
     col_sum = final_df['individualxGoals'].sum()
@@ -196,8 +202,14 @@ def process_goalie_data(path, game_id):
     goalie_df = goalie_df.sort(by='name', descending=False)\
         .with_columns(
             pl.col('gameID').fill_null(game_id),
-            pl.col('gameDate').fill_null(date)
+            pl.col('gameDate').fill_null(date),
+            pl.col('season').fill_null(season)
         ).fill_nan(0).fill_null(0)
+
+    # Round values in all float columns to 2 decimal places
+    for column in goalie_df.columns:
+        if goalie_df[column].dtype == pl.Float64:
+            goalie_df = goalie_df.select(pl.col(column).round(2))
 
     return goalie_df[['name', 'gameID', 'gameDate', 'season', 'team', 'state', 'iceTime',
                       'shotsAgainst', 'goalsAgainst', 'xGoalsAgainst']]
