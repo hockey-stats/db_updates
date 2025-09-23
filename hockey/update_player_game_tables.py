@@ -166,8 +166,6 @@ def process_goalie_data(path, game_id):
         if len(goalie_df) == 0:
             goalie_df = df
         else:
-            with pl.Config(tbl_cols=20):
-                print(df)
             goalie_df = pl.concat([goalie_df, df])
 
     goalie_df = goalie_df.rename({
@@ -203,7 +201,7 @@ def main(path, game_id):
     print("Processing raw skater and goalie data...")
     skater_df = process_skater_data(path, game_id)
     goalie_df = process_goalie_data(path, game_id)
-    print(goalie_df)
+
     print('Connecting to database...')
     conn = duckdb.connect(database=DB_NAME, read_only=False)
 
