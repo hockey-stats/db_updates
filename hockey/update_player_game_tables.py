@@ -36,6 +36,12 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
         # and then also get the date to use for the output filename.
         date, _, team, state, _ = os.path.basename(filename).split('_')
 
+        # 'season' column will be the year the season started in.
+        if int(date.split('-')[1]) >= 9:
+            season = int(date.split('-')[0])
+        else:
+            season = int(date.split('-')[0]) - 1
+
         df = pl.read_csv(filename)[['Player', 'Position', 'TOI', 'Goals', 'First Assists',
                                     'Second Assists', 'Shots', 'ixG']]
 
@@ -43,7 +49,8 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
             pl.lit(state).alias('state'),
             pl.lit(team).alias('team'),
             pl.lit(game_id).alias('game_id'),
-            pl.lit(date).alias('game_date')
+            pl.lit(date).alias('game_date'),
+            pl.lit(season).alias('season')
         ).cast(
             {
                 'TOI': pl.Float64,
@@ -118,7 +125,7 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
     if col_sum == 0:
         raise ValueError("Expected Goal values sum to 0, issue with data source, exiting...")
 
-    return final_df[['name', 'gameID', 'gameDate', 'team', 'position', 'state', 'iceTime',
+    return final_df[['name', 'gameID', 'gameDate', 'season', 'team', 'position', 'state', 'iceTime',
                      'goals', 'primaryAssists', 'secondaryAssists', 'shots', 'individualxGoals',
                      'goalsFor', 'goalsAgainst', 'goalsShare', 'xGoalsFor', 'xGoalsAgainst',
                      'xGoalsShare', 'corsiFor', 'corsiAgainst', 'corsiShare']]
@@ -135,7 +142,12 @@ def process_goalie_data(path, game_id):
     goalie_df = pl.DataFrame()
     for filename in glob.glob(os.path.join(path, f'*{game_id}*goalies.csv')):
         date, _, team, state, _ = os.path.basename(filename).split('_')
-        print(filename)
+
+        # 'season' column will be the year the season started in.
+        if int(date.split('-')[1]) >= 9:
+            season = int(date.split('-')[0])
+        else:
+            season = int(date.split('-')[0]) - 1
 
         df = pl.read_csv(filename)[['Player', 'TOI', 'Shots Against', 'Goals Against',
                                     'Expected Goals Against']]
@@ -144,6 +156,7 @@ def process_goalie_data(path, game_id):
             pl.lit(state).alias('state'),
             pl.lit(game_id).alias('game_id'),
             pl.lit(date).alias('game_date'),
+            pl.lit(season).alias('season'),
         )
 
         # Sometimes columns that are supposed to be numerical will have an empty string value,
@@ -188,7 +201,7 @@ def process_goalie_data(path, game_id):
             pl.col('gameDate').fill_null(date)
         ).fill_nan(0).fill_null(0)
 
-    return goalie_df[['name', 'gameID', 'gameDate', 'team', 'state', 'iceTime',
+    return goalie_df[['name', 'gameID', 'gameDate', 'season', 'team', 'state', 'iceTime',
                       'shotsAgainst', 'goalsAgainst', 'xGoalsAgainst']]
 
 
