@@ -45,8 +45,14 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
             pl.lit(game_id).alias('game_id'),
             pl.lit(date).alias('game_date')
         ).cast(
-            {'TOI': pl.Float64,
-             'ixG': pl.Float64}
+            {
+                'TOI': pl.Float64,
+                'Goals': pl.Int64,
+                'First Assists': pl.Int64,
+                'Second Assists': pl.Int64,
+                'Shots': pl.Int64,
+                'ixG': pl.Float64,
+            }
         )
 
         if len(indiv_df) == 0:
@@ -68,8 +74,10 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
             ((pl.col('xGF') / (pl.col('xGF') + pl.col('xGA'))) * 100).round(2).alias('xGoalsShare'),
             ((pl.col('CF') / (pl.col('CF') + pl.col('CA'))) * 100).round(2).alias('corsiShare'),
         ).cast(
-            {'xGF': pl.Float64,
-             'xGA': pl.Float64}
+            {
+                'xGF': pl.Float64,
+                'xGA': pl.Float64
+            }
         )
 
         if len(onice_df) == 0:
@@ -127,6 +135,7 @@ def process_goalie_data(path, game_id):
     goalie_df = pl.DataFrame()
     for filename in glob.glob(os.path.join(path, f'*{game_id}*goalies.csv')):
         date, _, team, state, _ = os.path.basename(filename).split('_')
+        print(filename)
 
         df = pl.read_csv(filename)[['Player', 'TOI', 'Shots Against', 'Goals Against',
                                     'Expected Goals Against']]
@@ -134,15 +143,31 @@ def process_goalie_data(path, game_id):
             pl.lit(team).alias('team'),
             pl.lit(state).alias('state'),
             pl.lit(game_id).alias('game_id'),
-            pl.lit(date).alias('game_date')
-        ).cast(
-            {'TOI': pl.Float64,
-             'Expected Goals Against': pl.Float64}
+            pl.lit(date).alias('game_date'),
+        )
+
+        # Sometimes columns that are supposed to be numerical will have an empty string value,
+        # so replace those with 0s
+        for column in ['Shots Against', 'Goals Against', 'Expected Goals Against']:
+            if df[column].dtype == pl.String:
+                df = df.with_columns(
+                    pl.col(column).replace("", "0")
+                )
+
+        df = df.cast(
+            {
+                'TOI': pl.Float64,
+                'Shots Against': pl.Int64,
+                'Goals Against': pl.Int64,
+                'Expected Goals Against': pl.Float64,
+            }
         )
 
         if len(goalie_df) == 0:
             goalie_df = df
         else:
+            with pl.Config(tbl_cols=20):
+                print(df)
             goalie_df = pl.concat([goalie_df, df])
 
     goalie_df = goalie_df.rename({
@@ -178,7 +203,7 @@ def main(path, game_id):
     print("Processing raw skater and goalie data...")
     skater_df = process_skater_data(path, game_id)
     goalie_df = process_goalie_data(path, game_id)
-
+    print(goalie_df)
     print('Connecting to database...')
     conn = duckdb.connect(database=DB_NAME, read_only=False)
 
