@@ -2,7 +2,7 @@ name: Scrape and Plot Game Report
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/15 1-6 * * *'
+    - cron: '*/10 1-10 * * *'
 
 env: 
   DATA_ARTIFACT_NAME: 'game-data'
