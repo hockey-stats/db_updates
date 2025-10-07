@@ -235,10 +235,10 @@ def main(path, game_id):
     conn = duckdb.connect(database=DB_NAME, read_only=False)
 
     print("Updating skater table...")
-    conn.execute("INSERT INTO preseason_skater_games SELECT * FROM skater_df")
+    conn.execute("INSERT INTO skater_games SELECT * FROM skater_df")
 
     print("Updating goalie table...")
-    conn.execute("INSERT INTO preseason_goalie_games SELECT * FROM goalie_df")
+    conn.execute("INSERT INTO goalie_games SELECT * FROM goalie_df")
 
     print('Database update complete!')
 
