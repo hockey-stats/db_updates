@@ -18,9 +18,6 @@ def gather_df(season: int) -> pl.DataFrame:
     """
     Script used to update tables containing game-by-game data for each team.
 
-    The dataset provided by MoneyPuck includes every season going back to 2008. This is a bit
-    excessive for our purposes, so in our table we will only store data from the current season.
-
     Designed to be called by a larger DB update script (e.g. update_tables.py in this directory).
 
     As of August 27, 2025, the plots which use this table are:

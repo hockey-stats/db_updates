@@ -1,9 +1,10 @@
-import datetime
+from datetime import datetime
 from argparse import ArgumentParser
 
 import duckdb
 
 import process_skater_data
+import process_goalie_data
 import process_team_data
 import process_game_data
 
@@ -29,6 +30,9 @@ def main(season: int) -> None:
     print('Gathering skater data...')
     skater_df = process_skater_data.gather_df(season)
 
+    print('Gathering goalie data...')
+    goalie_df = process_goalie_data.gather_df(season)
+
     print('Gathering team data...')
     team_df = process_team_data.gather_df(season)
 
@@ -38,11 +42,12 @@ def main(season: int) -> None:
     print('Connecting to database...')
     conn = duckdb.connect(database=DB_NAME, read_only=False)
 
-    for df, table_name in zip([skater_df, team_df, team_games_df],
-                              ['skaters', 'teams', 'team_games']):
+    for df, table_name in zip([skater_df, goalie_df, team_df, team_games_df],
+                              ['skaters', 'goalies', 'teams', 'team_games']):
 
         print(f"Updating {table_name} table...")
-        conn.execute(f'CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM df;')
+        conn.execute(f'DELETE FROM {table_name} WHERE season = {season}')
+        conn.execute(f'INSERT INTO {table_name} SELECT * FROM df;')
 
     print('Database update complete!')
 
@@ -50,8 +55,8 @@ def main(season: int) -> None:
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('-s', '--season', type=int,
-                        default=datetime.datetime.now().year - 1 if datetime.datetime.now().month < 10 \
-                                else datetime.datetime.now().year,
+                        default=datetime.now().year - 1 if datetime.now().month < 10 \
+                                else datetime.now().year,
                         help='Season for which we pull data')
     args = parser.parse_args()
 
