@@ -14,6 +14,53 @@ USED_COLUMNS = ['season', 'team', 'situation', 'games_played', 'iceTime', 'goals
 ########### End Constants ###############
 
 
+def fix_moneypuck_csv_header_issue(season: int) -> pl.DataFrame:
+    """
+    In rare cases, the CSV files provided by MoneyPuck will be missing a header row. This function
+    contains logic to download the data, and subsitute a header row from another year, to create
+    a new CSV with the proper header and read it into a DataFrame.
+
+    :param int season: The season with the erroneous CSV.
+    :return pl.DataFrame: The fixed CSV.
+    """
+    import requests
+
+    with requests.Session() as s:
+        # Download the header-less data from MoneyPuck
+        download = s.get(DATA_URL.format(season))
+        decoded = download.content.decode('utf-8')
+        broken_data = decoded.splitlines()
+
+        # We take all but the first entry per row, since the first entry corresponds to a
+        # duplicated 'team' column
+        broken_data = [row.split(',')[1:] for row in broken_data]
+
+        # Download a known working version to get the proper header row from
+        download = s.get(DATA_URL.format(2024))
+        decoded = download.content.decode('utf-8')
+
+        # This gives us all the headers in a comma-seperated single string
+        working_header = decoded.splitlines()[0]
+
+        # In the same way as above, remove the first entry from the headers and make it
+        # a list of strings
+        working_header = working_header.split(',')[1:]
+
+    # And put it all together as a DataFrame
+    df = pl.DataFrame(data=broken_data, schema=working_header, orient='row')[USED_COLUMNS]
+    df = df.cast({
+        'season': pl.Int64,
+        'games_played': pl.Int64,
+        'iceTime': pl.Float64,
+        'goalsFor': pl.Float64,
+        'goalsAgainst': pl.Float64,
+        'flurryScoreVenueAdjustedxGoalsFor': pl.Float64,
+        'flurryScoreVenueAdjustedxGoalsAgainst': pl.Float64
+    })
+
+    return df
+
+
 def gather_df(season: int) -> pl.DataFrame:
     """
     Script used to update tables containing team-level data.
@@ -29,7 +76,11 @@ def gather_df(season: int) -> pl.DataFrame:
     :param int season: The season we'll be working with.
     """
 
-    df = pl.read_csv(DATA_URL.format(season), columns=USED_COLUMNS)
+    try:
+        df = pl.read_csv(DATA_URL.format(season), columns=USED_COLUMNS)
+    except pl.exceptions.ColumnNotFoundError:
+        # As of Oct. 15 2025, the 2022 data has no header in the CSV, so apply a fix here
+        df = fix_moneypuck_csv_header_issue(season)
 
     # Icetime is in seconds by default, convert to minutes
     df = df.with_columns(pl.col('iceTime') / 60.0)
@@ -42,17 +93,20 @@ def gather_df(season: int) -> pl.DataFrame:
     })
 
     # Compute rate metrics from each column containing a total metric value,
-    # i.e. goalsFor -> goalsForPerHour 
+    # i.e. goalsFor -> goalsForPerHour
     for total_col, rate_col in zip(['goalsFor', 'goalsAgainst', 'xGoalsFor', 'xGoalsAgainst'],
                                    ['goalsForPerHour', 'goalsAgainstPerHour',
                                     'xGoalsForPerHour', 'xGoalsAgainstPerHour']):
 
         df = df.with_columns((pl.col(total_col) * (60.0 / pl.col('iceTime'))).alias(rate_col))
 
-    return df
+    return df[['team', 'season', 'situation', 'gamesPlayed', 'iceTime', 'xGoalsFor', 'goalsFor',
+               'xGoalsAgainst', 'goalsAgainst', 'goalsAgainstPerHour', 'goalsForPerHour',
+               'xGoalsForPerHour', 'xGoalsAgainstPerHour']]
 
 
 if __name__ == '__main__':
-    test_df = gather_df(2024)
-    print(test_df.filter(pl.col('situation') == '5on5'))
+    test_df = gather_df(2022)
+    with pl.Config(tbl_cols=40):
+        print(test_df.filter(pl.col('situation') == '5on5'))
     test_df.write_csv('test.csv')
