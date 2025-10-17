@@ -37,6 +37,7 @@ def gather_df(season: int) -> pl.DataFrame:
 
     # Rename a few columns to match DB schema
     df = df.rename({
+        'playerId': 'playerID',
         'games_played': 'gamesPlayed',
         'icetime': 'iceTime'
     })
