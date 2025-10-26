@@ -1,8 +1,7 @@
 """
-One-off script to replace the team_games table with a newer version that contains a proper date column.
+One-off script which can be used to add new columns to team_games table
 """
 
-import os
 from datetime import datetime
 import polars as pl
 import duckdb
