@@ -1,0 +1,95 @@
+name: Gather Historic NST Tables
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/10 * * * *'
+
+env: 
+  DATA_ARTIFACT_NAME: 'historic-game-data'
+
+jobs:
+  scrape-data:
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: sohraub/hockey-stats-web-scraper:main
+
+    env:
+      GH_TOKEN: ${{ secrets.ARTIFACT_DOWNLOAD_TOKEN }}
+      MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN_RW }}
+
+    permissions:
+      actions: write
+      contents: read
+      
+    steps: 
+      - name: Check if any new games are available
+        id: check
+        run: |
+          cd /home/scraping
+          python3 check_for_new_games.py -y 2024
+
+      - name: Scrape game data
+        if: steps.check.outputs.game_id != 'NONE'
+        run: |
+          cd /home/scraping
+          python3 scrape_game_data.py -y 2024 -g ${{ steps.check.outputs.game_id }}
+
+      - name: Save raw game data as artifact
+        if: steps.check.outputs.game_id != 'NONE'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.DATA_ARTIFACT_NAME }}
+          path: /home/scraping/tables/*csv
+          retention-days: 1
+
+      - name: Set output for artifact name
+        if: steps.check.outputs.game_id != 'NONE'
+        id: set-output
+        run: echo "data_artifact_name=$DATA_ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
+
+    outputs:
+      game_id: ${{ steps.check.outputs.game_id }}
+#############
+#############
+  update-tables:
+
+    runs-on: ubuntu-latest
+    needs: scrape-data
+
+    if: needs.scrape-data.outputs.game_id != 'NONE'
+
+    env: 
+      GAME_ID: ${{ needs.scrape-data.outputs.game_id }}
+      MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN_RW }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: hockey-stats/db_updates
+
+      - name: Download data artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.DATA_ARTIFACT_NAME }}
+          
+      - name: Check file structure
+        run: |
+          ls -lrt;
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install requirements
+        run: pip install -r requirements.txt
+
+      - name: Process raw data
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          python3 hockey/update_player_game_tables.py -p ./ -g $GAME_ID
