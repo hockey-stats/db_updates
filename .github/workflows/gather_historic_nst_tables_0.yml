@@ -7,8 +7,6 @@ on:
 env: 
   DATA_ARTIFACT_NAME: 'historic-game-data'
 
-concurrency: historic-game-date-scraping
-
 jobs:
   scrape-data:
 
