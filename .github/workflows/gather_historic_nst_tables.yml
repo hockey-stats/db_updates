@@ -2,7 +2,7 @@ name: Gather Historic NST Tables
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/1 * * * *'
 
 env: 
   DATA_ARTIFACT_NAME: 'historic-game-data'
