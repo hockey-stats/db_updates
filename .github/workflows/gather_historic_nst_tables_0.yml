@@ -1,4 +1,4 @@
-name: Gather Historic NST Tables
+name: Gather Historic NST Tables 0
 on:
   workflow_dispatch:
   schedule:
