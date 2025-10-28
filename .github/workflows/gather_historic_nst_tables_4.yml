@@ -1,11 +1,13 @@
-name: Update NST Tables
+name: Gather Historic NST Tables
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/10 1-10 * * *'
+    - cron: '*/15 * * * *'
 
 env: 
-  DATA_ARTIFACT_NAME: 'game-data'
+  DATA_ARTIFACT_NAME: 'historic-game-data'
+
+concurrency: historic-game-date-scraping
 
 jobs:
   scrape-data:
@@ -28,13 +30,13 @@ jobs:
         id: check
         run: |
           cd /home/scraping
-          python3 check_for_new_games.py -y 2025
+          python3 check_for_new_games.py -y 2024 -m 4
 
       - name: Scrape game data
         if: steps.check.outputs.game_id != 'NONE'
         run: |
           cd /home/scraping
-          python3 scrape_game_data.py -y 2025 -g ${{ steps.check.outputs.game_id }}
+          python3 scrape_game_data.py -y 2024 -g ${{ steps.check.outputs.game_id }}
 
       - name: Save raw game data as artifact
         if: steps.check.outputs.game_id != 'NONE'
