@@ -15,13 +15,8 @@ def main():
 
     s_df = connection.sql('SELECT * FROM skater_games').pl()
 
-    s_df = s_df.rename({
-        "state": "situation",
-    })
-
-    # Fix issue with NST using '\xa0' instead of a space in names
     s_df = s_df.with_columns(
-        pl.col('name').str.replace_all('\xa0', ' ', literal=True)
+        pl.col('situation').str.replace_all('\xa0', ' ', literal=True)
     )
 
     print(s_df)

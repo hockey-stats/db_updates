@@ -75,10 +75,6 @@ jobs:
         with:
           name: ${{ env.DATA_ARTIFACT_NAME }}
           
-      - name: Check file structure
-        run: |
-          ls -lrt;
-
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -88,7 +84,12 @@ jobs:
       - name: Install requirements
         run: pip install -r requirements.txt
 
-      - name: Process raw data
+      - name: Backup tables
+        run: |
+          python3 backup_dbs.py -s skater_games;
+          python3 backup_dbs.py -s goalie_games;
+
+      - name: Update tables
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: |
