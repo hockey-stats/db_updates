@@ -42,7 +42,8 @@ def gather_df(season: int) -> pl.DataFrame:
     df = df.with_columns(
         # Convert gameDate from a YYYYMMDD format to a YYYY-MM-DD format using datetime
         pl.col('gameDate').map_elements(
-            lambda date: datetime.strftime(datetime.strptime(str(date), '%Y%m%d'), '%Y-%m-%d')
+            lambda date: datetime.strftime(datetime.strptime(str(date), '%Y%m%d'), '%Y-%m-%d'),
+            return_dtype=pl.String
         ),
         # Also convert 'home_or_away' into a boolean column
         pl.col('home_or_away').map_elements(

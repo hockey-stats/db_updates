@@ -101,7 +101,7 @@ def gather_df(season: int) -> pl.DataFrame:
         df = df.with_columns((pl.col(total_col) * (60.0 / pl.col('iceTime'))).alias(rate_col))
 
     return df[['team', 'season', 'situation', 'gamesPlayed', 'iceTime', 'xGoalsFor', 'goalsFor',
-               'xGoalsAgainst', 'goalsAgainst', 'goalsAgainstPerHour', 'goalsForPerHour',
+               'xGoalsAgainst', 'goalsAgainst', 'goalsForPerHour', 'goalsAgainstPerHour',
                'xGoalsForPerHour', 'xGoalsAgainstPerHour']]
 
 
