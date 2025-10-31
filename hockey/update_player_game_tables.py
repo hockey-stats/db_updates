@@ -123,7 +123,12 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
 
     # Fix issue with NST using '\xa0' instead of a space in names
     final_df = final_df.with_columns(
-        pl.col('name').str.replace_all('\xa0', ' ', literal=True)
+        pl.col('name').str.replace_all('\xa0', ' ', literal=True),
+        # Also make sure team abbreviations match MoneyPuck
+        pl.col('team').str.replace_many(
+            ['NJ', 'SJ', 'TB', 'LA'],
+            ['NJD', 'SJS', 'TBL', 'LAK']
+        )
     )
 
     # Check for and handle an error with the data source where xG values are all given as 0
@@ -208,7 +213,12 @@ def process_goalie_data(path, game_id):
 
     # Fix issue with NST using '\xa0' instead of a space in names
     goalie_df = goalie_df.with_columns(
-        pl.col('name').str.replace_all('\xa0', ' ', literal=True)
+        pl.col('name').str.replace_all('\xa0', ' ', literal=True),
+        # Also make sure team abbreviations match MoneyPuck
+        pl.col('team').str.replace_many(
+            ['NJ', 'SJ', 'TB', 'LA'],
+            ['NJD', 'SJS', 'TBL', 'LAK']
+        )
     )
 
     return goalie_df[['name', 'gameID', 'gameDate', 'season', 'team', 'state', 'iceTime',
