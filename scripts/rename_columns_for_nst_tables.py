@@ -15,23 +15,21 @@ def main():
 
     s_df = connection.sql('SELECT * FROM skater_games').pl()
 
-    s_df = s_df.with_columns(
-        pl.col('team').str.replace_many(
-            ['NJ', 'SJ', 'TB', 'LA'],
-            ['NJD', 'SJS', 'TBL', 'LAK']
+    for bad, good in zip(['FLAK', 'SJSS', 'LAKK', 'TBLL', 'NJDD'],
+                         ['FLA', 'SJS', 'LAK', 'TBL', 'NJD']):
+        s_df = s_df.with_columns(
+            pl.col('team').str.replace_all(f'^{bad}$', good)
         )
-    )
 
     # And now goalie_games
 
     g_df = connection.sql('SELECT * FROM goalie_games').pl()
 
-    g_df = g_df.with_columns(
-        pl.col('team').str.replace_many(
-            ['NJ', 'SJ', 'TB', 'LA'],
-            ['NJD', 'SJS', 'TBL', 'LAK']
+    for bad, good in zip(['FLAK', 'SJSS', 'LAKK', 'TBLL', 'NJDD'],
+                         ['FLA', 'SJS', 'LAK', 'TBL', 'NJD']):
+        s_df = s_df.with_columns(
+            pl.col('team').str.replace_all(f'^{bad}$', good)
         )
-    )
 
     connection.sql('CREATE OR REPLACE TABLE skater_games AS SELECT * FROM s_df;')
     connection.sql('CREATE OR REPLACE TABLE goalie_games AS SELECT * FROM g_df;')
