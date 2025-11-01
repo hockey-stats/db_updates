@@ -27,7 +27,7 @@ def main():
 
     for bad, good in zip(['FLAK', 'SJSS', 'LAKK', 'TBLL', 'NJDD'],
                          ['FLA', 'SJS', 'LAK', 'TBL', 'NJD']):
-        s_df = s_df.with_columns(
+        g_df = g_df.with_columns(
             pl.col('team').str.replace_all(f'^{bad}$', good)
         )
 
