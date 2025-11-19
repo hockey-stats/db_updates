@@ -225,6 +225,12 @@ def process_goalie_data(path, game_id):
             pl.col('team').str.replace_all(f'^{bad}$', good)
         )
 
+    # Check for and handle an error with the data source where xG values are all given as 0
+    col_sum = goalie_df['xGoalsAgainst'].sum()
+    if col_sum == 0:
+        raise ValueError("Expected Goal values sum to 0, issue with data source, exiting...")
+
+
     return goalie_df[['name', 'gameID', 'gameDate', 'season', 'team', 'state', 'iceTime',
                       'shotsAgainst', 'goalsAgainst', 'xGoalsAgainst']]
 
