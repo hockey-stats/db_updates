@@ -2,7 +2,7 @@ name: Update NST Tables
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/10 1-10 * * *'
+    - cron: '*/15 1-20 * * *'
 
 env: 
   DATA_ARTIFACT_NAME: 'game-data'
@@ -94,3 +94,4 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: |
           python3 hockey/update_player_game_tables.py -p ./ -g $GAME_ID
+
