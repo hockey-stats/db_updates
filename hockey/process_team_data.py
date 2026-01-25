@@ -1,5 +1,5 @@
 import polars as pl
-
+from urllib.error import HTTPError
 
 ############## Constants ################
 
@@ -61,6 +61,33 @@ def fix_moneypuck_csv_header_issue(season: int) -> pl.DataFrame:
     return df
 
 
+def get_data_with_retries(data_url: str, season: int, columns: list[str], 
+                          retries: int=3) -> pl.DataFrame:
+    """
+    If an HTTP error is raised when trying to pull the CSV, this function is called to
+    try it again a few more times.
+
+    Args:
+        data_url (str): URL template to CSV file.
+        season (int): Season for which to gather data.
+        columns (list[str]): Columns to keep from the raw CSV.
+        retries (int, optional): Max number of retries to try, Defaults to 3.
+
+    Returns:
+        pl.DataFrame: The data in the CSV.
+    """
+    i = 0
+    while i <= retries:
+        try:
+            df = pl.read_csv(data_url.format(season), columns=columns)
+            return df
+        except HTTPError as e:
+            print(e)
+            print(f"Attempt #{i + 1} failed, retrying...")
+            i += 1
+    raise e
+
+
 def gather_df(season: int) -> pl.DataFrame:
     """
     Script used to update tables containing team-level data.
@@ -68,10 +95,6 @@ def gather_df(season: int) -> pl.DataFrame:
     Pulls full data from MoneyPuck for a given season, saving only columns relevant to our plots,
     and stores in a polars DF. Then computes a few additional columns before updating the relevant
     table in the given database.
-
-    As of August 25, 2025, the plots which use this table are:
-        - Team ratio scatter plots (e.g. xGF vs xGA)
-        - Special teams lollipop plots
 
     :param int season: The season we'll be working with.
     """
@@ -81,6 +104,10 @@ def gather_df(season: int) -> pl.DataFrame:
     except pl.exceptions.ColumnNotFoundError:
         # As of Oct. 15 2025, the 2022 data has no header in the CSV, so apply a fix here
         df = fix_moneypuck_csv_header_issue(season)
+    except HTTPError as e:
+        print(e)
+        df = get_data_with_retries(data_url=DATA_URL, season=season, columns=USED_COLUMNS)
+
 
     # Icetime is in seconds by default, convert to minutes
     df = df.with_columns(pl.col('iceTime') / 60.0)

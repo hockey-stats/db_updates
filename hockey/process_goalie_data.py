@@ -1,5 +1,7 @@
 import polars as pl
+from urllib.error import HTTPError
 
+from process_team_data import get_data_with_retries
 
 
 ############## Constants ################
@@ -30,7 +32,11 @@ def gather_df(season: int) -> pl.DataFrame:
     :return pl.DataFrame: Cleaned and processed DataFrame that will be used to update the DB.
     """
 
-    df = pl.read_csv(DATA_URL.format(season), columns=USED_COLUMNS)
+    try:
+        df = pl.read_csv(DATA_URL.format(season), columns=USED_COLUMNS)
+    except HTTPError as e:
+        print(e)
+        df = get_data_with_retries(data_url=DATA_URL, season=season, columns=USED_COLUMNS)
 
     # Icetime is in seconds by default, convert to minutes
     df = df.with_columns(pl.col('icetime') / 60.0)
