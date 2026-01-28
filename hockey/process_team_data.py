@@ -86,8 +86,9 @@ def get_data_with_retries(data_url: str, season: int, columns: list[str],
             print(e)
             print(f"Attempt #{i + 1} failed, retrying...")
             i += 1
-						sleep(5)
-    raise Exception("Failed after 3 times, exiting...")
+            exception = e
+            sleep(5)
+    raise exception
 
 
 def gather_df(season: int) -> pl.DataFrame:
