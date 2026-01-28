@@ -1,5 +1,6 @@
 import polars as pl
 from urllib.error import HTTPError
+import requests
 
 from process_team_data import get_data_with_retries
 
@@ -40,11 +41,15 @@ def gather_df(season: int) -> pl.DataFrame:
     :return pl.DataFrame: Cleaned and proccessed DataFrame that will be used to update the DB.
     """
 
-    try:
-        df = pl.read_csv(DATA_URL.format(season), columns=USED_COLUMNS)
-    except HTTPError as e:
-        print(e)
-        df = get_data_with_retries(data_url=DATA_URL, season=season, columns=USED_COLUMNS)
+    #try:
+    #    df = pl.read_csv(DATA_URL.format(season), columns=USED_COLUMNS)
+    #except HTTPError as e:
+    #    print(e)
+    #    df = get_data_with_retries(data_url=DATA_URL, season=season, columns=USED_COLUMNS)
+
+    r = requests.get(DATA_URL.format(season), verify=False)
+    df = pl.read_csv(r.content, columns=USED_COLUMNS)
+
 
     # Rename some columns to be nicer to work with
     df = df.rename({

@@ -1,6 +1,7 @@
 import polars as pl
 from urllib.error import HTTPError
 from time import sleep
+import requests
 
 ############## Constants ################
 
@@ -102,14 +103,16 @@ def gather_df(season: int) -> pl.DataFrame:
     :param int season: The season we'll be working with.
     """
 
-    try:
-        df = pl.read_csv(DATA_URL.format(season), columns=USED_COLUMNS)
-    except pl.exceptions.ColumnNotFoundError:
-        # As of Oct. 15 2025, the 2022 data has no header in the CSV, so apply a fix here
-        df = fix_moneypuck_csv_header_issue(season)
-    except HTTPError as e:
-        print(e)
-        df = get_data_with_retries(data_url=DATA_URL, season=season, columns=USED_COLUMNS)
+    #try:
+    #    df = pl.read_csv(DATA_URL.format(season), columns=USED_COLUMNS)
+    #except pl.exceptions.ColumnNotFoundError:
+    #    # As of Oct. 15 2025, the 2022 data has no header in the CSV, so apply a fix here
+    #    df = fix_moneypuck_csv_header_issue(season)
+    #except HTTPError as e:
+    #    print(e)
+    #    df = get_data_with_retries(data_url=DATA_URL, season=season, columns=USED_COLUMNS)
+    r = requests.get(DATA_URL.format(season), verify=False)
+    df = pl.read_csv(r.content, columns=USED_COLUMNS)
 
 
     # Icetime is in seconds by default, convert to minutes
