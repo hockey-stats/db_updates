@@ -1,5 +1,6 @@
 import polars as pl
 from urllib.error import HTTPError
+from time import sleep
 
 ############## Constants ################
 
@@ -62,7 +63,7 @@ def fix_moneypuck_csv_header_issue(season: int) -> pl.DataFrame:
 
 
 def get_data_with_retries(data_url: str, season: int, columns: list[str], 
-                          retries: int=3) -> pl.DataFrame:
+                          retries: int=5) -> pl.DataFrame:
     """
     If an HTTP error is raised when trying to pull the CSV, this function is called to
     try it again a few more times.
@@ -85,6 +86,7 @@ def get_data_with_retries(data_url: str, season: int, columns: list[str],
             print(e)
             print(f"Attempt #{i + 1} failed, retrying...")
             i += 1
+						sleep(5)
     raise Exception("Failed after 3 times, exiting...")
 
 
