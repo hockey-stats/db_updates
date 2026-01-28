@@ -1,5 +1,6 @@
 from datetime import datetime
 import polars as pl
+import requests
 
 
 
@@ -31,7 +32,9 @@ def gather_df(season: int) -> pl.DataFrame:
     :return pl.DataFrame: Cleaned and proccessed DataFrame that will be used to update the DB.
     """
 
-    df = pl.read_csv(DATA_URL, columns=USED_COLUMNS)
+    #df = pl.read_csv(DATA_URL, columns=USED_COLUMNS)
+    r = requests.get(DATA_URL, verify=False)
+    df = pl.read_csv(r.content, columns=USED_COLUMNS)
 
     # Filter to just this season and exclude playoff games
     df = df.filter((pl.col('season') == season) & (pl.col('playoffGame') == 0))
