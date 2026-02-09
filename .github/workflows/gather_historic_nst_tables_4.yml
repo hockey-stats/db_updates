@@ -28,13 +28,13 @@ jobs:
         id: check
         run: |
           cd /home/scraping
-          python3 check_for_new_games.py -y 2023 -m 4
+          python3 check_for_new_games.py -y 2025 -m 4
 
       - name: Scrape game data
         if: steps.check.outputs.game_id != 'NONE'
         run: |
           cd /home/scraping
-          python3 scrape_game_data.py -y 2023 -g ${{ steps.check.outputs.game_id }}
+          python3 scrape_game_data.py -y 2025 -g ${{ steps.check.outputs.game_id }}
 
       - name: Save raw game data as artifact
         if: steps.check.outputs.game_id != 'NONE'

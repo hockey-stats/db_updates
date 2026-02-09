@@ -43,7 +43,8 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
             season = int(date.split('-')[0]) - 1
 
         df = pl.read_csv(filename)[['Player', 'Position', 'TOI', 'Goals', 'First Assists',
-                                    'Second Assists', 'Shots', 'ixG']]
+                                    'Second Assists', 'Shots', 'ixG', 'Total Penalties',
+                                    'Penalties Drawn', 'Hits']]
 
         df = df.with_columns(
             pl.lit(state).alias('state'),
@@ -59,6 +60,9 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
                 'Second Assists': pl.Int64,
                 'Shots': pl.Int64,
                 'ixG': pl.Float64,
+                'Total Penalties': pl.Int64,
+                'Penalties Drawn': pl.Int64,
+                'Hits': pl.Int64
             }
         )
 
@@ -109,7 +113,10 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
         'xGF': 'xGoalsFor',
         'xGA': 'xGoalsAgainst',
         'CF': 'corsiFor',
-        'CA': 'corsiAgainst'
+        'CA': 'corsiAgainst',
+        'Total Penalties': 'penaltiesTaken',
+        'Penalties Drawn': 'penaltiesDrawn',
+        'Hits': 'hits'
     })
 
     # Some columns (such as date and game id) will be null for certain players in certain game
@@ -251,10 +258,10 @@ def main(path, game_id):
     conn = duckdb.connect(database=DB_NAME, read_only=False)
 
     print("Updating skater table...")
-    conn.execute("INSERT INTO skater_games SELECT * FROM skater_df")
+    conn.execute("INSERT INTO skater_games_2 SELECT * FROM skater_df")
 
     print("Updating goalie table...")
-    conn.execute("INSERT INTO goalie_games SELECT * FROM goalie_df")
+    conn.execute("INSERT INTO goalie_games_2 SELECT * FROM goalie_df")
 
     print('Database update complete!')
 

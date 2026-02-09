@@ -22,8 +22,8 @@ if __name__ == '__main__':
     print('Connecting to database...')
     conn = duckdb.connect(database=DB_NAME, read_only=False)
 
-    skater_table = 'skater_games'
-    goalie_table = 'goalie_games'
+    skater_table = 'skater_games_2'
+    goalie_table = 'goalie_games_2'
     if args.preseason:
         skater_table = f'preseason_{skater_table}'
         goalie_table = f'preseason_{goalie_table}'
@@ -51,7 +51,10 @@ if __name__ == '__main__':
                     xGoalsShare FLOAT,
                     corsiFor INT,
                     corsiAgaint INT,
-                    corsiShare FLOAT
+                    corsiShare FLOAT,
+                    penaltiesTaken INT,
+                    penaltiesDrawn INT,
+                    hits INT
                  );
                  """)
 
