@@ -148,7 +148,8 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
     return final_df[['name', 'gameID', 'gameDate', 'season', 'team', 'position', 'state', 'iceTime',
                      'goals', 'primaryAssists', 'secondaryAssists', 'shots', 'individualxGoals',
                      'goalsFor', 'goalsAgainst', 'goalsShare', 'xGoalsFor', 'xGoalsAgainst',
-                     'xGoalsShare', 'corsiFor', 'corsiAgainst', 'corsiShare']]
+                     'xGoalsShare', 'corsiFor', 'corsiAgainst', 'corsiShare', 'penaltiesTaken',
+                     'penaltiesDrawn', 'hits']]
 
 def process_goalie_data(path, game_id):
     """
