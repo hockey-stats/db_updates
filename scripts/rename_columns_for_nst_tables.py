@@ -13,10 +13,10 @@ def main():
 
     # Start with skater_games
 
-    #s_df = connection.sql('SELECT * FROM skater_games').pl()
+    s_df = connection.sql('SELECT * FROM skater_games').pl()
 
     # For handling column names
-    #s_df = s_df.rename({'state': 'situation'})
+    s_df = s_df.rename({'corsiAgaint': 'corsiAgainst'})
 
     # For handling cell values
     #for bad, good in zip(['FLAK', 'SJSS', 'LAKK', 'TBLL', 'NJDD'],
@@ -27,9 +27,9 @@ def main():
 
     # And now goalie_games
 
-    g_df = connection.sql('SELECT * FROM goalie_games').pl()
+    #g_df = connection.sql('SELECT * FROM goalie_games').pl()
 
-    g_df = g_df.rename({'state': 'situation'})
+    #g_df = g_df.rename({'state': 'situation'})
     # For handling cell values
     #for bad, good in zip(['FLAK', 'SJSS', 'LAKK', 'TBLL', 'NJDD'],
     #                     ['FLA', 'SJS', 'LAK', 'TBL', 'NJD']):
@@ -37,8 +37,8 @@ def main():
     #        pl.col('team').str.replace_all(f'^{bad}$', good)
     #    )
 
-    #connection.sql('CREATE OR REPLACE TABLE skater_games AS SELECT * FROM s_df;')
-    connection.sql('CREATE OR REPLACE TABLE goalie_games AS SELECT * FROM g_df;')
+    connection.sql('CREATE OR REPLACE TABLE skater_games AS SELECT * FROM s_df;')
+    #connection.sql('CREATE OR REPLACE TABLE goalie_games AS SELECT * FROM g_df;')
 
 if __name__ == '__main__':
     main()
