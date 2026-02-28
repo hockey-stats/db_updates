@@ -102,6 +102,7 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
         'game_id': 'gameID',
         'game_date': 'gameDate',
         'Position': 'position',
+				'state': 'situation',
         'TOI': 'iceTime',
         'Goals': 'goals',
         'First Assists': 'primaryAssists',
@@ -145,7 +146,7 @@ def process_skater_data(path: str, game_id: int) -> pl.DataFrame:
     if col_sum == 0:
         raise ValueError("Expected Goal values sum to 0, issue with data source, exiting...")
 
-    return final_df[['name', 'gameID', 'gameDate', 'season', 'team', 'position', 'state', 'iceTime',
+    return final_df[['name', 'gameID', 'gameDate', 'season', 'team', 'position', 'situation', 'iceTime',
                      'goals', 'primaryAssists', 'secondaryAssists', 'shots', 'individualxGoals',
                      'goalsFor', 'goalsAgainst', 'goalsShare', 'xGoalsFor', 'xGoalsAgainst',
                      'xGoalsShare', 'corsiFor', 'corsiAgainst', 'corsiShare', 'penaltiesTaken',
@@ -205,6 +206,7 @@ def process_goalie_data(path, game_id):
     goalie_df = goalie_df.rename({
         'Player': 'name',
         'TOI': 'iceTime',
+				'state': 'situation',
         'Shots Against': 'shotsAgainst',
         'Goals Against': 'goalsAgainst',
         'Expected Goals Against': 'xGoalsAgainst',
@@ -239,7 +241,7 @@ def process_goalie_data(path, game_id):
         raise ValueError("Expected Goal values sum to 0, issue with data source, exiting...")
 
 
-    return goalie_df[['name', 'gameID', 'gameDate', 'season', 'team', 'state', 'iceTime',
+    return goalie_df[['name', 'gameID', 'gameDate', 'season', 'team', 'situation', 'iceTime',
                       'shotsAgainst', 'goalsAgainst', 'xGoalsAgainst']]
 
 
@@ -259,10 +261,10 @@ def main(path, game_id):
     conn = duckdb.connect(database=DB_NAME, read_only=False)
 
     print("Updating skater table...")
-    conn.execute("INSERT INTO skater_games_2 SELECT * FROM skater_df")
+    conn.execute("INSERT INTO skater_games SELECT * FROM skater_df")
 
     print("Updating goalie table...")
-    conn.execute("INSERT INTO goalie_games_2 SELECT * FROM goalie_df")
+    conn.execute("INSERT INTO goalie_games SELECT * FROM goalie_df")
 
     print('Database update complete!')
 
