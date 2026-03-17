@@ -9,5 +9,6 @@ dependencies = [
     "numpy>=1.2.1,<2",
     "pandas>=2.1.2",
     "polars[pyarrow]>=1.29.0",
+    "pyhockey>=0.2.0",
     "requests>=2.32.5",
 ]
